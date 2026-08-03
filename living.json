@@ -1,0 +1,200 @@
+[
+  {
+    "category": "LIVING",
+    "itemId": "living_withderm_skincover_patch",
+    "name": "위드덤 스킨커버 프랜드 실속형",
+    "price": 2000,
+    "store": "다이소",
+    "reason": "크기 및 종류가 다양하고 여드름 패치로 가성비가 좋음",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/withderm_skincover_patch.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_madeca_medi_patch",
+    "name": "마데카 메디패치",
+    "price": 3000,
+    "store": "다이소",
+    "reason": "마데카솔 성분의 상처 진정 효과, 방수 능력과 원하는 모양으로 잘라서 편하게 사용 가능",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/madeca_medi_patch.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_mist_spray_120ml",
+    "name": "안개분사 화장품 스프레이 120ml",
+    "price": 1000,
+    "store": "다이소",
+    "reason": "화장이 뭉치지 않는 미세 안개 분사와 들고 다니기에도 쓰기에도 딱 좋은 120ml 매일 쓰는 스킨케어 필수템",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/mist_spray_120ml.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_velcro_tape",
+    "name": "잘라 쓰는 벨크로 테이프 2X60cm",
+    "price": 1000,
+    "store": "다이소",
+    "reason": "전선 정리, 고정시키는 것 등 정리할 때 유용, 사이즈도 잘라서 조정 가능",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/velcro_tape.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_silicone_kitchenware",
+    "name": "실리콘 주방용품 (냄비손잡이, 실리콘집게 등)",
+    "price": 5000,
+    "store": "다이소",
+    "reason": "실리콘 재질의 주방용 장갑, 관리가 편함",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/silicone_kitchenware.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_laundry_net",
+    "name": "속옷 양말 세탁망",
+    "price": 1000,
+    "store": "다이소",
+    "reason": "가성비 최고의 세탁망",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/laundry_net.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_shinshin_pas_arex",
+    "name": "신신파스 아렉스",
+    "price": 4000,
+    "store": "약국",
+    "reason": "냉찜질 온찜질 둘 다 해주는 릴리프 파스로 접착력이 좋고 가성비가 최고",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/shinshin_pas_arex.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_baea_je",
+    "name": "배아제",
+    "price": 3000,
+    "store": "약국",
+    "reason": "효과가 좋아 많이 사가는 한국 소화제",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/baea_je.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_condition_hangover_drink",
+    "name": "컨디션",
+    "price": 3900,
+    "store": "편의점",
+    "reason": "숙취해소제, 간편하게 먹을 수 있고 효과가 좋음. 주로 1+1 행사 많이 함",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/condition_hangover_drink.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_stainless_cutlery_set",
+    "name": "스테인리스 수저세트",
+    "price": 3000,
+    "store": "다이소",
+    "reason": "가격이 저렴하고 위생에 좋은 수저세트",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/stainless_cutlery_set.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_makeup_puff",
+    "name": "화장 퍼프",
+    "price": 2000,
+    "store": "다이소",
+    "reason": "다량으로 사기에 좋음. 일단 가성비가 좋아 한국에서 사면 좋음",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/makeup_puff.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_microwave_egg_steamer",
+    "name": "전자레인지 계란찜 용기",
+    "price": 3000,
+    "store": "다이소",
+    "reason": "전자레인지로 만드는 계란찜기, 품질도 좋고 가격도 좋음",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/microwave_egg_steamer.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_mutandard_crew_socks",
+    "name": "라이트웨이트 크루삭스",
+    "price": 17990,
+    "store": "무탠다드",
+    "reason": "품질이 좋고 좋은 가격, 종류가 많음",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/mutandard_crew_socks.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_neoflam_scissors",
+    "name": "네오플램 TPE 핸들 스테인리스 주방 가위",
+    "price": 3000,
+    "store": "다이소",
+    "reason": "가격 대비 성능이 좋고 스테인리스로 위생에도 좋음",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/neoflam_scissors.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_vacuum_container_1350ml",
+    "name": "진공 저장 용기 1350ml 결착형",
+    "price": 3000,
+    "store": "다이소",
+    "reason": "식품 저장용기로 가성비 좋고 사용 후기가 좋음",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/vacuum_container_1350ml.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_taehwa_rubber_gloves",
+    "name": "태화 고무장갑",
+    "price": 3000,
+    "store": "다이소",
+    "reason": "여러 색이 있고 가성비가 정말로 좋음",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/taehwa_rubber_gloves.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_uv_block_cool_sleeves",
+    "name": "[UV 최대 99% 차단] 자외선 차단 쿨 토시 남성용 블랙",
+    "price": 2000,
+    "store": "다이소",
+    "reason": "가성비가 좋고 기능이 정말 좋음",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/uv_block_cool_sleeves.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_adhesive_hot_pack_15p",
+    "name": "부착형 핫팩 대용량 15개입",
+    "price": 5000,
+    "store": "다이소",
+    "reason": "정말 저렴함. 성능도 좋음",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/adhesive_hot_pack_15p.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_suede_knit_gloves",
+    "name": "스웨이드풍 니트 장갑",
+    "price": 5000,
+    "store": "다이소",
+    "reason": "터치가 가능하고 인조스웨이드로 만들어 따뜻함. 가격도 좋음",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/suede_knit_gloves.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_vitamin_shower_filter_lavender",
+    "name": "비타민 샤워 필터 (라벤더)",
+    "price": 5000,
+    "store": "다이소",
+    "reason": "고급스러운 샤워기 필터를 이 가격에? 좋은 향도 냄",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/vitamin_shower_filter_lavender.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_docking_power_bank_ctype",
+    "name": "도킹형 보조배터리 C타입 화이트",
+    "price": 5000,
+    "store": "다이소",
+    "reason": "가성비 제품으로 본국 돌아가서도 쓰기에 좋음",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/docking_power_bank_ctype.jpg"
+  },
+  {
+    "category": "LIVING",
+    "itemId": "living_roll_up_compression_bag_l",
+    "name": "롤업형 압축팩L",
+    "price": 1000,
+    "store": "다이소",
+    "reason": "열심히 쇼핑한 당신 캐리어에 꽉꽉 넣어주는 가성비 제품",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/living/roll_up_compression_bag_l.jpg"
+  }
+]

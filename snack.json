@@ -1,0 +1,203 @@
+[
+  {
+    "category": "SNACK",
+    "itemId": "snack_osulloc_pretzel",
+    "name": "오설록 말차 프레첼",
+    "price": 6000,
+    "store": "올리브영",
+    "reason": "말차 좋아하면 개추. 말차의 녹진한 맛이 일품.",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/osulloc_pretzel.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_honey_butter_almond",
+    "name": "허니버터아몬드",
+    "price": 6900,                          
+    "store": "hbaf명동매장",
+    "reason": "아몬드에 맛을 입힌 맛있는 음식",
+    "discountInfo": "5개사면 30000원",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/honey_butter_almond.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_samlip_yakgwa",
+    "name": "삼립약과(500g)",
+    "price": 5480,
+    "store": "롯데, e마트",
+    "reason": "한국 디저트라는 인식 선물용으로 좋음",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/samlip_yakgwa.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_binggrae_banana_milk",
+    "name": "빙그레 바나나맛우유",
+    "price": 1800,
+    "store": "편의점",
+    "reason": "우유와 바나나향이 강하고 부드럽고 맛있음",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/binggrae_banana_milk.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_choco_pie",
+    "name": "초코파이",
+    "price": 4320,
+    "store": "롯데, e마트",
+    "reason": "부드럽고 촉촉한 식감(가성비 좋다)",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/choco_pie.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_buldak_ramen",
+    "name": "불닭볶음면",
+    "price": 5100,
+    "store": "롯데, e마트",
+    "reason": "다른 나라에 없는 매운 맛을 느껴보고 싶으면 강추",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/buldak_ramen.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_yangban_gimbugak",
+    "name": "(양반)김부각",
+    "price": 4470,
+    "store": "롯데, e마트",
+    "reason": "한국 김을 과자로 먹어보는 느낌",
+    "discountInfo": "2개사면 1개 더줌",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/yangban_gimbugak.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_kkobuk_chip_corn",
+    "name": "꼬북칩 콘스프맛",
+    "price": 1700,
+    "store": "편의점",
+    "reason": "바삭하고 고소한 중독성 있는 과자 강추",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/kkobuk_chip_corn.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_almond_pepero",
+    "name": "아몬드 빼빼로",
+    "price": 2000,
+    "store": "편의점",
+    "reason": "견과류가 붙어 있는 초코 과자 pocky와는 다른 독보적인 맛",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/almond_pepero.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_shin_ramen",
+    "name": "라면(신라면)",
+    "price": 4150,
+    "store": "롯데, e마트",
+    "reason": "한국국물라면의 정석 맵고 맛있음 가장 한국적임",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/shin_ramen.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_maxim_mocha_gold",
+    "name": "맥심 모카믹스(50입)",
+    "price": 7410,
+    "store": "롯데, e마트",
+    "reason": "한국의 독보적인 맛이 담겨 있는 균형잡힌 커피(호불호 없음)",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/maxim_mocha_gold.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_daecheon_gim",
+    "name": "대천김 재래참기름김(12봉)",
+    "price": 8990,
+    "store": "롯데, e마트",
+    "reason": "감칠맛과 고소한 맛이 흔치 않은 맛",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/daecheon_gim.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_ottogi_sesame_oil",
+    "name": "참기름(오뚜기)",
+    "price": 13680,
+    "store": "롯데, e마트",
+    "reason": "압도적인 고소함(다른 아시아권과 방식이 다름)",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/ottogi_sesame_oil.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_bibigo_kimchi",
+    "name": "볶음 김치 (cj비비고)",
+    "price": 8980,
+    "store": "롯데, e마트",
+    "reason": "한국인의 김치가 맛있다면 강추",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/bibigo_kimchi.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_homerun_ball",
+    "name": "홈런볼 4입",
+    "price": 5290,
+    "store": "롯데, e마트",
+    "reason": "푹신한 슈 식감의 초코과자",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/homerun_ball.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_moncher",
+    "name": "몽쉘",
+    "price": 5590,
+    "store": "롯데, e마트",
+    "reason": "파이 안에 슈크림이 정말 촉촉하고 맛있음",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/moncher.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_oh_yes",
+    "name": "오예스",
+    "price": 5290,
+    "store": "롯데, e마트",
+    "reason": "파이에 수분양이 많아 가장 촉촉함",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/oh_yes.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_honey_butter_almond_injeolmi",
+    "name": "허니버터아몬드(인절미)",
+    "price": 6900,
+    "store": "hbaf매장",
+    "reason": "일본 키나코과자와 다르게 질리지 않고 많이 먹을 수 있음(짠맛이 좀 있음)",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/honey_butter_almond_injeolmi.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_teazen_kombucha",
+    "name": "티젠 콤부차 유자",
+    "price": 7480,
+    "store": "롯데, e마트",
+    "reason": "깔끔하게 스틱형으로 구성 맛이 달다.",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/teazen_kombucha.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_wasabi_seaweed_snack",
+    "name": "와사비 김스낵",
+    "price": 3800,
+    "store": "명동hbaf",
+    "reason": "바삭한 김과 와사비와의 만남 정말 맛있음",
+    "discountInfo": "5개 15000원",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/wasabi_seaweed_snack.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_pocachip_4pack",
+    "name": "포카칩4입(for미국)",
+    "price": 3390,
+    "store": "롯데, e마트",
+    "reason": "적절한 짭짤함과 고소함이 들어가 있는 대표 한국 감자스낵",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/pocachip_4pack.jpg"
+  },
+  {
+    "category": "SNACK",
+    "itemId": "snack_jin_ramen_stick",
+    "name": "진라면 스틱",
+    "price": 5000,
+    "store": "다이소",
+    "reason": "한국인의 마법 비법 라면소스 국물 요리에 넣으면 풍미를 살려줌",
+    "imageUrl": "https://dambda-images.s3.ap-northeast-2.amazonaws.com/snack/jin_ramen_stick.jpg"
+  }
+]
