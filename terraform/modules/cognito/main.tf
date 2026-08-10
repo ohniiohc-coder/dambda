@@ -46,7 +46,7 @@ resource "aws_cognito_user_pool_client" "app_client" {
 
   # 이메일 로그인과 소셜 로그인을 함께 제공한다. Google/Facebook 공급자는 각 개발자
   # 콘솔에서 발급한 Client ID/Secret을 등록한 뒤 이 목록에 추가한다.
-  supported_identity_providers         = ["COGNITO"]
+  supported_identity_providers         = ["COGNITO", "Google"]
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_flows                  = ["code"]
   allowed_oauth_scopes = [
@@ -68,6 +68,25 @@ resource "aws_cognito_user_pool_client" "app_client" {
     access_token  = "minutes"
     id_token      = "minutes"
     refresh_token = "days"
+  }
+
+  depends_on = [aws_cognito_identity_provider.google]
+}
+
+resource "aws_cognito_identity_provider" "google" {
+  user_pool_id  = aws_cognito_user_pool.users.id
+  provider_name = "Google"
+  provider_type = "Google"
+
+  provider_details = {
+    client_id        = var.google_client_id
+    client_secret    = var.google_client_secret
+    authorize_scopes = "openid email profile"
+  }
+
+  attribute_mapping = {
+    email    = "email"
+    username = "sub"
   }
 }
 

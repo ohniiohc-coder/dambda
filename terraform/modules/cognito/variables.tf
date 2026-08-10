@@ -7,3 +7,14 @@ variable "site_url" {
   description = "Public web origin allowed for Cognito OAuth callbacks"
   type        = string
 }
+
+variable "google_client_id" {
+  description = "Google OAuth client ID"
+  type        = string
+}
+
+variable "google_client_secret" {
+  description = "Google OAuth client secret"
+  type        = string
+  sensitive   = true
+}
