@@ -1,4 +1,4 @@
-github_owner      = "your-github-owner"
+github_owners     = ["your-github-owner"]
 github_repository = "dambda"
 state_bucket_name = "your-unique-dambda-terraform-state"
 

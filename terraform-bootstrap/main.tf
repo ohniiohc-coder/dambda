@@ -32,10 +32,10 @@ resource "aws_iam_openid_connect_provider" "github" {
 }
 
 locals {
-  repository          = "repo:${var.github_owner}/${var.github_repository}"
-  repository_with_ids = "repo:${var.github_owner}@*/${var.github_repository}@*"
-  oidc_arn            = aws_iam_openid_connect_provider.github.arn
-  state_arn           = aws_s3_bucket.state.arn
+  repositories          = [for owner in var.github_owners : "repo:${owner}/${var.github_repository}"]
+  repositories_with_ids = [for owner in var.github_owners : "repo:${owner}@*/${var.github_repository}@*"]
+  oidc_arn              = aws_iam_openid_connect_provider.github.arn
+  state_arn             = aws_s3_bucket.state.arn
 }
 
 data "aws_iam_policy_document" "plan_trust" {
@@ -53,12 +53,12 @@ data "aws_iam_policy_document" "plan_trust" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values = [
-        "${local.repository}:pull_request",
-        "${local.repository}:environment:dev-plan",
-        "${local.repository_with_ids}:pull_request",
-        "${local.repository_with_ids}:environment:dev-plan",
-      ]
+      values = concat(
+        [for repository in local.repositories : "${repository}:pull_request"],
+        [for repository in local.repositories : "${repository}:environment:dev-plan"],
+        [for repository in local.repositories_with_ids : "${repository}:pull_request"],
+        [for repository in local.repositories_with_ids : "${repository}:environment:dev-plan"],
+      )
     }
   }
 }
@@ -78,10 +78,10 @@ data "aws_iam_policy_document" "deploy_trust" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values = [
-        "${local.repository}:environment:production",
-        "${local.repository_with_ids}:environment:production",
-      ]
+      values = concat(
+        [for repository in local.repositories : "${repository}:environment:production"],
+        [for repository in local.repositories_with_ids : "${repository}:environment:production"],
+      )
     }
   }
 }

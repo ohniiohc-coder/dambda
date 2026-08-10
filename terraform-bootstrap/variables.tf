@@ -3,9 +3,9 @@ variable "aws_region" {
   default = "ap-northeast-2"
 }
 
-variable "github_owner" {
-  description = "GitHub organization or user name"
-  type        = string
+variable "github_owners" {
+  description = "GitHub organizations or users allowed to run this repository's CI/CD"
+  type        = set(string)
 }
 
 variable "github_repository" {
