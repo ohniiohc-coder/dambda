@@ -1,0 +1,40 @@
+# terraform.tfvars
+# 이 파일을 복사해서 terraform.tfvars로 만들고 값을 채워넣기 (terraform.tfvars는 gitignore됨)
+aws_region      = "ap-northeast-2"
+region_name     = "dambda"
+vpc_cidr        = "10.0.0.0/16"
+public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnets = ["10.0.10.0/24", "10.0.11.0/24"]
+container_port  = 80
+
+# 미국(us-east-1) 리전
+us_aws_region      = "us-east-1"
+us_region_name     = "dambda-us"
+us_vpc_cidr        = "10.1.0.0/16"
+us_public_subnets  = ["10.1.1.0/24", "10.1.2.0/24"]
+us_private_subnets = ["10.1.10.0/24", "10.1.11.0/24"]
+
+# CloudWatch 경보 SNS 이메일 구독 주소 (비워두면 토픽만 생성되고 구독은 안 됨)
+cloudwatch_alarm_email = ""
+
+# Bedrock 상품 추천/질의 모델. Tavily 키는 tfvars에 저장하지 말고 GitHub Secret으로 주입
+bedrock_model_id         = "apac.amazon.nova-micro-v1:0"
+tavily_api_key           = ""
+admin_notification_email = ""
+
+# Google 소셜 로그인 (Cognito). 비워두면 Google 로그인 비활성화
+google_oauth_client_id     = ""
+google_oauth_client_secret = ""
+
+# TODO: 도메인 미확정 - 정해지면 채우기 (비워두면 CloudFront 기본 도메인만 사용, Route53/ACM 리소스는 생성 안 됨)
+web_domain_name    = ""
+web_domain_aliases = []
+
+# Amazon Managed Service for Prometheus를 콘솔에서 만든 뒤 활성화
+enable_prometheus           = false
+prometheus_workspace_arn    = ""
+prometheus_remote_write_url = ""
+
+# AWS Managed Grafana - IAM Identity Center를 콘솔에서 먼저 켜야 함
+enable_grafana              = false
+grafana_admin_sso_group_ids = []

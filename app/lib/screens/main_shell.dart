@@ -1,0 +1,166 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../l10n/app_localizations.dart';
+import '../router.dart';
+import '../state/app_state.dart';
+import '../state/auth_state.dart';
+import '../services/notification_service.dart';
+import '../theme/app_theme.dart';
+
+class MainShell extends StatefulWidget {
+  final StatefulNavigationShell navigationShell;
+
+  const MainShell({super.key, required this.navigationShell});
+
+  @override
+  State<MainShell> createState() => _MainShellState();
+}
+
+class _MainShellState extends State<MainShell> {
+  final _notificationService = NotificationService();
+
+  @override
+  void initState() {
+    super.initState();
+    appState.loadProducts();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showNotifications());
+  }
+
+  Future<void> _showNotifications() async {
+    final token = authState.accessToken;
+    if (token == null) return;
+    try {
+      final notifications = await _notificationService.listUnread(token);
+      if (!mounted || notifications.isEmpty) return;
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('알림'),
+          content: SizedBox(
+            width: 420,
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: notifications.length,
+              separatorBuilder: (_, _) => const Divider(),
+              itemBuilder: (context, index) {
+                final notification = notifications[index];
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.info_outline),
+                  title: Text(
+                    notification['notificationMessage'] as String? ??
+                        '해당 게시물은 관리자에 의해 삭제되었습니다.',
+                  ),
+                  subtitle: notification['productId'] == null
+                      ? null
+                      : Text('상품: ${notification['productId']}'),
+                );
+              },
+            ),
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('확인'),
+            ),
+          ],
+        ),
+      );
+      await Future.wait(
+        notifications.map(
+          (notification) => _notificationService.markRead(
+            token,
+            notification['eventId'] as String,
+          ),
+        ),
+      );
+    } catch (error) {
+      debugPrint('notification check failed: $error');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final items = [
+      (
+        icon: Icons.home_rounded,
+        outlineIcon: Icons.home_outlined,
+        label: l10n.navHome,
+      ),
+      (
+        icon: Icons.menu_rounded,
+        outlineIcon: Icons.menu_rounded,
+        label: l10n.navCategory,
+      ),
+      (
+        icon: Icons.favorite,
+        outlineIcon: Icons.favorite_border,
+        label: l10n.navLikes,
+      ),
+      (
+        icon: Icons.person,
+        outlineIcon: Icons.person_outline,
+        label: l10n.navMy,
+      ),
+    ];
+    final currentIndex = widget.navigationShell.currentIndex;
+    return Scaffold(
+      body: widget.navigationShell,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => openChat(context),
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.auto_awesome, color: Colors.white),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          height: 60,
+          decoration: const BoxDecoration(
+            border: Border(top: BorderSide(color: AppColors.divider)),
+          ),
+          child: Row(
+            children: [
+              for (var i = 0; i < items.length; i++)
+                Expanded(
+                  child: InkWell(
+                    onTap: () => widget.navigationShell.goBranch(
+                      i,
+                      initialLocation: i == currentIndex,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          i == currentIndex
+                              ? items[i].icon
+                              : items[i].outlineIcon,
+                          color: i == currentIndex
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
+                          size: 24,
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          items[i].label,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: i == currentIndex
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: i == currentIndex
+                                ? AppColors.textPrimary
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

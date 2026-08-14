@@ -1,0 +1,973 @@
+import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import '../l10n/app_localizations.dart';
+import '../models/review.dart';
+import '../services/auth_service.dart';
+import '../services/product_qa_service.dart';
+import '../services/review_service.dart';
+import '../state/app_state.dart';
+import '../state/auth_state.dart';
+import '../theme/app_theme.dart';
+
+class ProductDetailScreen extends StatefulWidget {
+  final String productId;
+
+  const ProductDetailScreen({super.key, required this.productId});
+
+  @override
+  State<ProductDetailScreen> createState() => _ProductDetailScreenState();
+}
+
+class _ProductDetailScreenState extends State<ProductDetailScreen> {
+  final ReviewService _reviewService = ReviewService();
+  final ProductQaService _qaService = ProductQaService();
+  final TextEditingController _textController = TextEditingController();
+  final TextEditingController _qaController = TextEditingController();
+
+  ReviewsResult? _result;
+  bool _loadingReviews = true;
+  bool _submitting = false;
+  int _rating = 0;
+  Uint8List? _photoBytes;
+  String? _photoName;
+  String? _photoMimeType;
+
+  bool _editing = false;
+  String? _editingExistingPhotoUrl;
+  bool _photoRemoved = false;
+  bool _asking = false;
+  String? _aiAnswer;
+
+  void _upsertReviewLocally(Review saved) {
+    final reviews = [...?_result?.reviews];
+    final index = reviews.indexWhere(
+      (review) =>
+          review.userId == saved.userId && review.productId == saved.productId,
+    );
+    if (index >= 0) {
+      reviews[index] = saved;
+    } else {
+      reviews.insert(0, saved);
+    }
+    final average = reviews.isEmpty
+        ? 0.0
+        : reviews.fold<int>(0, (sum, review) => sum + review.rating) /
+              reviews.length;
+    setState(() {
+      _result = ReviewsResult(
+        reviews: reviews,
+        averageRating: average,
+        reviewCount: reviews.length,
+      );
+      _loadingReviews = false;
+    });
+  }
+
+  void _removeReviewLocally(Review removed) {
+    final reviews = [...?_result?.reviews]
+      ..removeWhere(
+        (review) =>
+            review.userId == removed.userId &&
+            review.productId == removed.productId,
+      );
+    final average = reviews.isEmpty
+        ? 0.0
+        : reviews.fold<int>(0, (sum, review) => sum + review.rating) /
+              reviews.length;
+    setState(() {
+      _result = ReviewsResult(
+        reviews: reviews,
+        averageRating: average,
+        reviewCount: reviews.length,
+      );
+    });
+  }
+
+  String? _loadedReviewLanguage;
+
+  @override
+  void initState() {
+    super.initState();
+    // /product/:id로 직접 진입(딥링크, 새로고침)하면 MainShell을 안 거치므로
+    // 거기서만 트리거되는 카탈로그 로드가 안 불릴 수 있어 여기서도 보장해줌
+    if (appState.products.isEmpty && !appState.productsLoading) {
+      appState.loadProducts();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 최초 진입뿐 아니라 설정 언어가 바뀐 경우에도 해당 언어로 리뷰를 다시 요청한다.
+    final language = Localizations.localeOf(context).languageCode;
+    if (_loadedReviewLanguage != language) {
+      _loadedReviewLanguage = language;
+      _loadReviews();
+    }
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    _qaController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _askAi() async {
+    final question = _qaController.text.trim();
+    if (question.isEmpty || _asking) return;
+    setState(() {
+      _asking = true;
+      _aiAnswer = null;
+    });
+    try {
+      final answer = await _qaService.ask(widget.productId, question);
+      if (mounted) setState(() => _aiAnswer = answer);
+    } on ApiException catch (e) {
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
+    } finally {
+      if (mounted) setState(() => _asking = false);
+    }
+  }
+
+  // 웹에서는 상세 진입 시 push() 대신 go()를 써서(주소창 동기화를 위해) Navigator 스택에
+  // 이전 페이지가 쌓이지 않으므로 canPop()이 false - 이땐 현재 URL에서 "/product/:id" 접미사를
+  // 떼어내 원래 있던 탭(홈/카테고리/좋아요) 경로로 직접 이동한다.
+  void _goBack(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+    final location = GoRouterState.of(context).uri.toString();
+    final suffix = '/product/${widget.productId}';
+    var parent = location.endsWith(suffix)
+        ? location.substring(0, location.length - suffix.length)
+        : '/';
+    if (parent.isEmpty) parent = '/';
+    context.go(parent);
+  }
+
+  Future<void> _loadReviews() async {
+    setState(() => _loadingReviews = true);
+    try {
+      final lang = Localizations.localeOf(context).languageCode;
+      final result = await _reviewService.list(widget.productId, lang: lang);
+      if (mounted) setState(() => _result = result);
+    } catch (_) {
+      // 조회 실패 시 목록은 비워둔 채로 두고 조용히 넘어감(로딩 인디케이터만 꺼짐)
+    } finally {
+      if (mounted) setState(() => _loadingReviews = false);
+    }
+  }
+
+  Future<void> _pickPhoto() async {
+    final file = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+    if (file == null) return;
+    final bytes = await file.readAsBytes();
+    setState(() {
+      _photoBytes = bytes;
+      _photoName = file.name;
+      // 플랫폼에 따라 mimeType이 비어있을 수 있어서, 그럴 땐 파일 확장자로 추론
+      _photoMimeType = file.mimeType ?? _mimeTypeFromName(file.name);
+    });
+  }
+
+  String _mimeTypeFromName(String name) {
+    final lower = name.toLowerCase();
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.webp')) return 'image/webp';
+    return 'image/jpeg';
+  }
+
+  void _removePhoto() {
+    setState(() {
+      if (_photoBytes != null) {
+        // 새로 고른 사진을 취소한 것 - 편집 중이었다면 기존 사진이 다시 보이게 됨
+        _photoBytes = null;
+        _photoName = null;
+        _photoMimeType = null;
+      } else {
+        // 기존 사진 자체를 제거하겠다는 뜻
+        _photoRemoved = true;
+      }
+    });
+  }
+
+  void _resetForm() {
+    _textController.clear();
+    setState(() {
+      _rating = 0;
+      _photoBytes = null;
+      _photoName = null;
+      _photoMimeType = null;
+      _editing = false;
+      _editingExistingPhotoUrl = null;
+      _photoRemoved = false;
+    });
+  }
+
+  void _startEdit(Review review) {
+    _textController.text = review.text;
+    setState(() {
+      _rating = review.rating;
+      _editing = true;
+      _editingExistingPhotoUrl = review.photoUrl;
+      _photoRemoved = false;
+      _photoBytes = null;
+      _photoName = null;
+      _photoMimeType = null;
+    });
+  }
+
+  Future<void> _confirmDelete(Review review) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.deleteReviewTitle),
+        content: Text(l10n.deleteReviewContent),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(color: AppColors.primary),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final token = authState.accessToken;
+    if (token == null) return;
+    try {
+      await _reviewService.delete(token: token, productId: widget.productId);
+      _removeReviewLocally(review);
+      if (_editing) _resetForm();
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    }
+  }
+
+  Future<void> _submitReview() async {
+    final token = authState.accessToken;
+    if (token == null) return;
+    if (_rating == 0 || _textController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.reviewValidationError),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _submitting = true);
+    try {
+      late final Review saved;
+      if (_editing) {
+        saved = await _reviewService.update(
+          token: token,
+          productId: widget.productId,
+          rating: _rating,
+          text: _textController.text.trim(),
+          photoBytes: _photoBytes,
+          photoFilename: _photoName,
+          photoMimeType: _photoMimeType,
+          removePhoto: _photoRemoved,
+        );
+      } else {
+        saved = await _reviewService.submit(
+          token: token,
+          productId: widget.productId,
+          rating: _rating,
+          text: _textController.text.trim(),
+          photoBytes: _photoBytes,
+          photoFilename: _photoName,
+          photoMimeType: _photoMimeType,
+        );
+      }
+      _upsertReviewLocally(saved);
+      _resetForm();
+      // 현재 선택 언어로 새 리뷰/수정 리뷰를 즉시 다시 받아 번역된 문구를 표시한다.
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final lang = Localizations.localeOf(context).languageCode;
+    final myUserId = authState.profile?.userId;
+    final hasReviewed =
+        _result?.reviews.any((r) => r.userId == myUserId) ?? false;
+
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => _goBack(context),
+        ),
+        title: InkWell(
+          onTap: () => context.go('/'),
+          borderRadius: BorderRadius.circular(8),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            child: Text(
+              'DAMBDA',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ),
+      ),
+      body: ListenableBuilder(
+        listenable: appState,
+        builder: (context, _) {
+          final matches = appState.products.where(
+            (p) => p.id == widget.productId,
+          );
+          final product = matches.isEmpty ? null : matches.first;
+          if (product == null) {
+            if (appState.productsLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            return Center(
+              child: Text(
+                l10n.productNotFound,
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+            );
+          }
+          final liked = appState.isLiked(product.id);
+          return ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Flexible(
+                      flex: 4,
+                      child: _ProductImage(imageUrl: product.imageUrl),
+                    ),
+                    const SizedBox(width: 28),
+                    Expanded(
+                      flex: 6,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            product.localizedName(
+                              Localizations.localeOf(context).languageCode,
+                            ),
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          if (product.reasonFor(lang) != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              product.localizedReason(
+                                Localizations.localeOf(context).languageCode,
+                              )!,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Text(
+                                product.localizedPriceLabel(
+                                  Localizations.localeOf(context).languageCode,
+                                ),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  '${l10n.storeLabel}: ${product.localizedStore(Localizations.localeOf(context).languageCode)}',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                              if (product.discountInfoFor(lang) != null) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.08,
+                                    ),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    product.localizedDiscountInfo(
+                                      Localizations.localeOf(
+                                        context,
+                                      ).languageCode,
+                                    )!,
+                                    style: const TextStyle(
+                                      color: AppColors.primary,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              if (_result != null &&
+                                  _result!.reviewCount > 0) ...[
+                                const SizedBox(width: 8),
+                                Icon(
+                                  Icons.star,
+                                  size: 14,
+                                  color: Colors.amber[700],
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  '${_result!.averageRating.toStringAsFixed(1)} (${_result!.reviewCount})',
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => appState.toggleLike(
+                        product.id,
+                        authState.accessToken,
+                      ),
+                      icon: Icon(
+                        liked ? Icons.favorite : Icons.favorite_border,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _AskAiSection(
+                controller: _qaController,
+                answer: _aiAnswer,
+                asking: _asking,
+                onAsk: _askAi,
+              ),
+              const Divider(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  l10n.reviewCountLabel(_result?.reviewCount ?? 0),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (_loadingReviews)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else ...[
+                for (final review in _result?.reviews ?? [])
+                  _ReviewTile(
+                    review: review,
+                    isMine: myUserId != null && review.userId == myUserId,
+                    onEdit: () => _startEdit(review),
+                    onDelete: () => _confirmDelete(review),
+                  ),
+                if ((_result?.reviews ?? []).isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
+                    child: Text(
+                      l10n.reviewsEmpty,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+              ],
+              if ((!hasReviewed || _editing) &&
+                  authState.accessToken != null) ...[
+                const Divider(height: 32),
+                _ReviewForm(
+                  rating: _rating,
+                  textController: _textController,
+                  photoBytes: _photoBytes,
+                  existingPhotoUrl: _editingExistingPhotoUrl,
+                  photoRemoved: _photoRemoved,
+                  isEditing: _editing,
+                  submitting: _submitting,
+                  onRatingChanged: (value) => setState(() => _rating = value),
+                  onPickPhoto: _pickPhoto,
+                  onRemovePhoto: _removePhoto,
+                  onSubmit: _submitReview,
+                  onCancel: _editing ? _resetForm : null,
+                ),
+              ],
+              const SizedBox(height: 24),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _AskAiSection extends StatelessWidget {
+  final TextEditingController controller;
+  final String? answer;
+  final bool asking;
+  final VoidCallback onAsk;
+
+  const _AskAiSection({
+    required this.controller,
+    required this.answer,
+    required this.asking,
+    required this.onAsk,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.auto_awesome,
+                size: 18,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                l10n.askAiTitle,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  onSubmitted: (_) => onAsk(),
+                  decoration: InputDecoration(
+                    hintText: l10n.askAiHint,
+                    filled: true,
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              FilledButton(
+                onPressed: asking ? null : onAsk,
+                child: asking
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(l10n.askAiButton),
+              ),
+            ],
+          ),
+          if (answer != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(answer!),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ProductImage extends StatelessWidget {
+  final String? imageUrl;
+
+  const _ProductImage({required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    Widget fallback() => Container(
+      width: 160,
+      height: 160,
+      color: AppColors.surface,
+      alignment: Alignment.center,
+      child: const Icon(
+        Icons.shopping_bag_outlined,
+        size: 48,
+        color: AppColors.textSecondary,
+      ),
+    );
+
+    return Align(
+      alignment: Alignment.topLeft,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 360, maxHeight: 360),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: imageUrl == null
+              ? fallback()
+              : Image.network(
+                  imageUrl!,
+                  // scale 1은 S3 원본 픽셀 크기이고, 1 / 1.2는 화면에서
+                  // 원본의 1.2배 논리 크기로 렌더링한다.
+                  scale: 1 / 1.2,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.medium,
+                  errorBuilder: (context, error, stackTrace) => fallback(),
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ReviewTile extends StatelessWidget {
+  final Review review;
+  final bool isMine;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _ReviewTile({
+    required this.review,
+    required this.isMine,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const CircleAvatar(
+            radius: 16,
+            backgroundColor: AppColors.surface,
+            child: Icon(Icons.person, size: 18, color: AppColors.textSecondary),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      review.authorNickname,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    _StarRow(rating: review.rating, size: 12),
+                    if (isMine && review.moderationStatus == 'PENDING') ...[
+                      const SizedBox(width: 6),
+                      const Text(
+                        '검수 중',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                    if (isMine) ...[
+                      const Spacer(),
+                      IconButton(
+                        tooltip: l10n.updateReview,
+                        onPressed: onEdit,
+                        visualDensity: VisualDensity.compact,
+                        icon: const Icon(
+                          Icons.edit_outlined,
+                          size: 20,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: l10n.delete,
+                        onPressed: onDelete,
+                        visualDensity: VisualDensity.compact,
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          size: 20,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(review.text, style: const TextStyle(fontSize: 14)),
+                if (review.photoUrl != null) ...[
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      review.photoUrl!,
+                      width: 144,
+                      height: 144,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StarRow extends StatelessWidget {
+  final int rating;
+  final double size;
+
+  const _StarRow({required this.rating, this.size = 20});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 1; i <= 5; i++)
+          Icon(
+            i <= rating ? Icons.star : Icons.star_border,
+            size: size,
+            color: Colors.amber[700],
+          ),
+      ],
+    );
+  }
+}
+
+class _ReviewForm extends StatelessWidget {
+  final int rating;
+  final TextEditingController textController;
+  final Uint8List? photoBytes;
+  final String? existingPhotoUrl;
+  final bool photoRemoved;
+  final bool isEditing;
+  final bool submitting;
+  final ValueChanged<int> onRatingChanged;
+  final VoidCallback onPickPhoto;
+  final VoidCallback onRemovePhoto;
+  final VoidCallback onSubmit;
+  final VoidCallback? onCancel;
+
+  const _ReviewForm({
+    required this.rating,
+    required this.textController,
+    required this.photoBytes,
+    required this.existingPhotoUrl,
+    required this.photoRemoved,
+    required this.isEditing,
+    required this.submitting,
+    required this.onRatingChanged,
+    required this.onPickPhoto,
+    required this.onRemovePhoto,
+    required this.onSubmit,
+    this.onCancel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final showingExistingPhoto =
+        photoBytes == null && existingPhotoUrl != null && !photoRemoved;
+    final hasPhotoPreview = photoBytes != null || showingExistingPhoto;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                isEditing ? l10n.reviewFormTitleEdit : l10n.reviewFormTitleNew,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (isEditing && onCancel != null) ...[
+                const Spacer(),
+                TextButton(
+                  onPressed: onCancel,
+                  child: Text(
+                    l10n.cancel,
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              for (var i = 1; i <= 5; i++)
+                GestureDetector(
+                  onTap: () => onRatingChanged(i),
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Icon(
+                      i <= rating ? Icons.star : Icons.star_border,
+                      size: 32,
+                      color: Colors.amber[700],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: textController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: l10n.reviewHint,
+              filled: true,
+              fillColor: AppColors.surface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          if (hasPhotoPreview)
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: photoBytes != null
+                      ? Image.memory(
+                          photoBytes!,
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                        )
+                      : Image.network(
+                          existingPhotoUrl!,
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                        ),
+                ),
+                Positioned(
+                  right: -8,
+                  top: -8,
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.cancel,
+                      color: AppColors.textSecondary,
+                    ),
+                    onPressed: onRemovePhoto,
+                  ),
+                ),
+              ],
+            )
+          else
+            OutlinedButton.icon(
+              onPressed: onPickPhoto,
+              icon: const Icon(Icons.add_a_photo_outlined, size: 18),
+              label: Text(l10n.attachPhoto),
+            ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: submitting ? null : onSubmit,
+              child: submitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(isEditing ? l10n.updateReview : l10n.submitReview),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

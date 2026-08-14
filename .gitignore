@@ -1,0 +1,18 @@
+# Node (backend/)
+node_modules/
+npm-debug.log*
+
+# Terraform
+**/.terraform/
+# archive_file 데이터소스가 apply 때마다 자동 생성하는 Lambda 배포 zip
+dambda/modules/*/build/
+terraform.tfstate
+terraform.tfstate.*
+!terraform.tfstate.d
+*.tfplan
+# 예시 파일(terraform.tfvars.example)은 커밋하되, 실값이 들어가는 실제 파일은 제외
+terraform.tfvars
+
+# OS
+.DS_Store
+Thumbs.db
