@@ -494,6 +494,14 @@ resource "aws_iam_policy" "compute" {
         ]
       },
       {
+        # GetEventSourceMapping/ListEventSourceMappings는 AWS 문서상 리소스 단위 스코프
+        # 자체를 지원 안 해서 Resource="*"가 아니면 위 statement의 ARN 스코프가 있어도 거부됨
+        Sid      = "LambdaEventSourceMappingLookup"
+        Effect   = "Allow"
+        Action   = ["lambda:GetEventSourceMapping", "lambda:ListEventSourceMappings"]
+        Resource = "*"
+      },
+      {
         # api_gateway 모듈. HTTP API는 REST 동사(GET/POST/...) 기반 권한 모델이라
         # 액션 자체를 세분화할 수 없고, 대신 관리 대상 경로로 Resource를 좁힘
         Sid    = "ApiGatewayManagement"
@@ -574,7 +582,8 @@ resource "aws_iam_policy" "compute" {
           "cognito-idp:CreateUserPool", "cognito-idp:DeleteUserPool", "cognito-idp:UpdateUserPool",
           "cognito-idp:CreateUserPoolClient", "cognito-idp:DeleteUserPoolClient", "cognito-idp:UpdateUserPoolClient",
           "cognito-idp:CreateGroup", "cognito-idp:DeleteGroup", "cognito-idp:UpdateGroup",
-          "cognito-idp:TagResource"
+          "cognito-idp:TagResource",
+          "cognito-idp:CreateUserPoolDomain", "cognito-idp:DeleteUserPoolDomain"
         ]
         Resource = "*"
         Condition = {
