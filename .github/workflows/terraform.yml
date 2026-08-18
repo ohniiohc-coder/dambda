@@ -1,0 +1,54 @@
+name: Terraform (dambda infra)
+
+on:
+  push:
+    branches: [merge]
+    paths: ["dambda/**"]
+  pull_request:
+    branches: [merge]
+    paths: ["dambda/**"]
+
+# OIDC로 AWS 자격증명을 받기 위해 필요 (access key를 시크릿으로 안 둠)
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-northeast-2
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dambda
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::793001767302:role/github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.15.7"
+
+      - run: terraform init
+
+      # region_name은 기본값이 없는 필수 변수라 항상 명시해야 함. 나머지는 전부
+      # 기본값(빈 문자열/false)이 있어서, secret이 설정 안 돼 있어도 apply 자체는 됨 -
+      # 그 기능(도메인/구글로그인/알림 등)만 꺼진 채로 배포됨
+      - run: terraform plan -no-color -out=tfplan
+        env:
+          TF_VAR_region_name: dambda
+          TF_VAR_admin_notification_email: ${{ secrets.ADMIN_NOTIFICATION_EMAIL }}
+          TF_VAR_tavily_api_key: ${{ secrets.TAVILY_API_KEY }}
+          TF_VAR_google_oauth_client_id: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          TF_VAR_google_oauth_client_secret: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+          TF_VAR_web_domain_name: ${{ vars.WEB_DOMAIN_NAME }}
+          TF_VAR_cloudwatch_alarm_email: ${{ secrets.CLOUDWATCH_ALARM_EMAIL }}
+
+      # PR에서는 plan만 보여주고 apply는 merge 브랜치에 실제로 push됐을 때만
+      - if: github.event_name == 'push'
+        run: terraform apply -no-color -auto-approve tfplan

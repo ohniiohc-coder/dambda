@@ -1,0 +1,42 @@
+name: Frontend (web deploy)
+
+on:
+  push:
+    branches: [merge]
+    paths: ["app/**"]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-northeast-2
+  S3_BUCKET: dambda-static-site-793001767302
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - working-directory: app
+        run: |
+          flutter pub get
+          flutter build web --release
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::793001767302:role/github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - run: aws s3 sync app/build/web "s3://${{ env.S3_BUCKET }}" --delete
+
+      - run: |
+          DIST_ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?Origins.Items[0].DomainName=='${{ env.S3_BUCKET }}.s3.${{ env.AWS_REGION }}.amazonaws.com'].Id" \
+            --output text)
+          aws cloudfront create-invalidation --distribution-id "$DIST_ID" --paths "/*"
