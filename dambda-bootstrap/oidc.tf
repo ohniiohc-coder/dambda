@@ -34,9 +34,13 @@ resource "aws_iam_role" "github_actions_role" {
       }
       Condition = {
         StringLike = {
+          # GitHub이 리포/오너 이름 뒤에 불변 숫자 ID를 "@"로 붙이는 신규 sub 포맷을 씀
+          # (이름만으로 매칭하면 실제 토큰과 안 맞아서 AssumeRoleWithWebIdentity가 거부됨 -
+          # 실제 CI 실행 로그에서 발급된 sub 값을 그대로 확인해서 반영함).
+          # 278608277 = ohniiohc-coder 계정 ID, 1317790833 = dambda 저장소 ID (둘 다 불변값)
           "token.actions.githubusercontent.com:sub" = [
-            "repo:ohniiohc-coder/dambda:ref:refs/heads/merge",
-            "repo:ohniiohc-coder/dambda:pull_request"
+            "repo:ohniiohc-coder@278608277/dambda@1317790833:ref:refs/heads/merge",
+            "repo:ohniiohc-coder@278608277/dambda@1317790833:pull_request"
           ]
         }
       }
@@ -794,6 +798,48 @@ resource "aws_iam_policy" "ops" {
           "cognito-idp:AdminListGroupsForUser"
         ]
         Resource = "*"
+      },
+      {
+        # bootstrap 자신(role/policy/OIDC provider)에 대한 조회 전용 권한. core 정책의
+        # IamRoleManagement/IamPolicyManagement는 dambda-* 리소스만 대상이라 이 role/정책들
+        # 자체는 원래 안 보였음 - 수정 권한은 그대로 루트만 가능(DenySelfModification과 별개로,
+        # 애초에 core 정책 리소스 스코프 밖이라 Write 계열은 전혀 안 줌), 조회만 열어서
+        # 디버깅할 때마다 루트를 안 빌려도 되게 함
+        Sid    = "BootstrapSelfReadOnly"
+        Effect = "Allow"
+        Action = [
+          "iam:GetRole",
+          "iam:ListAttachedRolePolicies",
+          "iam:ListRolePolicies",
+          "iam:GetPolicy",
+          "iam:GetPolicyVersion",
+          "iam:ListPolicyVersions",
+          "iam:GetOpenIDConnectProvider",
+          "iam:GetUser",
+          "iam:ListAttachedUserPolicies",
+          "iam:ListUserPolicies"
+        ]
+        Resource = [
+          "arn:aws:iam::${local.account_id}:role/github-actions-role",
+          "arn:aws:iam::${local.account_id}:policy/github-actions-policy-*",
+          "arn:aws:iam::${local.account_id}:oidc-provider/token.actions.githubusercontent.com",
+          "arn:aws:iam::${local.account_id}:user/dambda-deployer"
+        ]
+      },
+      {
+        # ListOpenIDConnectProviders는 계정 전체 목록 조회라 리소스 단위 스코프 미지원
+        Sid      = "BootstrapListOnly"
+        Effect   = "Allow"
+        Action   = ["iam:ListOpenIDConnectProviders"]
+        Resource = "*"
+      },
+      {
+        # 락 테이블 자체는 core 정책이 GetItem/PutItem/DeleteItem만 허용 - 상태 확인용
+        # DescribeTable은 빠져 있어서 추가
+        Sid      = "BootstrapLockTableRead"
+        Effect   = "Allow"
+        Action   = ["dynamodb:DescribeTable"]
+        Resource = "arn:aws:dynamodb:ap-northeast-2:${local.account_id}:table/terraform-lock-table"
       }
     ]
   })
