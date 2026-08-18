@@ -30,6 +30,9 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::793001767302:role/github-actions-role
           aws-region: ${{ env.AWS_REGION }}
+          # v4가 기본으로 붙이는 세션 태그(7개)가 이 role의 트러스트 정책 조건 평가와
+          # 충돌해서 AssumeRoleWithWebIdentity가 거부됨 - 태그를 안 쓰므로 꺼서 우회
+          role-skip-session-tagging: true
 
       - uses: hashicorp/setup-terraform@v3
         with:

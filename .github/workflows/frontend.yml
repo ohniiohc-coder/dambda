@@ -33,6 +33,7 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::793001767302:role/github-actions-role
           aws-region: ${{ env.AWS_REGION }}
+          role-skip-session-tagging: true
 
       - run: aws s3 sync app/build/web "s3://${{ env.S3_BUCKET }}" --delete
 
