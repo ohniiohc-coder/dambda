@@ -1,4 +1,4 @@
-# 기본 설정 (세션 태깅 비활성화 수정 검증용 재트리거)
+# 기본 설정 (OIDC 토큰 claim 진단용 재트리거)
 variable "aws_region" {
   description = "AWS 리전 (예: ap-northeast-2)"
   type        = string
