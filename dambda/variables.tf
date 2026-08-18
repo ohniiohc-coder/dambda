@@ -1,4 +1,4 @@
-# 기본 설정 (OIDC 토큰 claim 진단용 재트리거)
+# 기본 설정
 variable "aws_region" {
   description = "AWS 리전 (예: ap-northeast-2)"
   type        = string
