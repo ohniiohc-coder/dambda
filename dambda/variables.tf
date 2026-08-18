@@ -1,4 +1,4 @@
-# 기본 설정 (CI 워크플로 최초 실행 테스트용 주석)
+# 기본 설정 (CI 워크플로 디버그 로그 테스트용 재트리거)
 variable "aws_region" {
   description = "AWS 리전 (예: ap-northeast-2)"
   type        = string
