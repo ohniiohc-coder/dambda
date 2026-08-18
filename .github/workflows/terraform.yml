@@ -7,6 +7,7 @@ on:
   pull_request:
     branches: [merge]
     paths: ["dambda/**"]
+  workflow_dispatch: {}
 
 # OIDC로 AWS 자격증명을 받기 위해 필요 (access key를 시크릿으로 안 둠)
 permissions:
